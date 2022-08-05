@@ -1,0 +1,147 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
+import matplotlib as mpl
+mpl.rcParams['animation.ffmpeg_path'] = r'C:\\ProgramData\\ffmpeg\\bin\\ffmpeg.exe'
+# import Adams
+import math
+from collections import OrderedDict
+x1 = []         # store coordinates in lists
+y1 = []
+x2 = []
+y2 = []
+x3 = []
+y3 = []
+xo = []
+yo = []
+xw = []
+yw = []
+xl = []
+yl = []
+
+def GET():
+    """
+    """
+    radius = 342.9
+    phradius = 152.4
+    offset = 22.225
+    length = 228.6
+    width = 114.3
+    angle = 120
+    phangle = 120
+    Cycle(radius, phradius, offset, length, width, angle, phangle)
+
+def Cycle(rad, phrad, ofs, leng, wid, ang, phang):  # center circle
+    for i in range(360):
+        angle = math.radians(ang)
+        x = rad * ((1 - math.tan(angle / 2) ** 2) / (1 + math.tan(angle / 2) ** 2))
+        y = rad * ((2 * math.tan(angle / 2)) / (1 + math.tan(angle / 2) ** 2))
+        print('Angle: ', ang)
+        print('x1: ', x, 'y1: ', y)
+        PointHead(phrad, ofs, leng, wid, phang, x, y, i)
+        ang += 1
+        phang -= 2
+        if ang > 360:   # keeps angle in bounds
+            ang -= 360
+        if phang < 0:   # keeps point head angle in bounds
+            phang += 360
+
+def PointHead(phrad, ofs, leng, wid, phang, x, y, i):  # point head circle
+    x1.append(x)
+    y1.append(y)
+    angle = math.radians(phang)
+    phx2 = phrad * ((1 - math.tan(angle / 2) ** 2) / (1 + math.tan(angle / 2) ** 2))
+    phy2 = phrad * ((2 * math.tan(angle / 2)) / (1 + math.tan(angle / 2) ** 2))
+    x2.append(phx2 + x)
+    y2.append(phy2 + y)
+    phang2 = phang - 90 # angle for offset and width
+    phang3 = phang + 90 # angle for length
+    if phang2 < 0:  # keeps looping
+        phang2 += 360
+    if phang3 > 360:
+        phang3 -= 360
+    angle2 = math.radians(phang2)
+    angle3 = math.radians(phang3)
+    phxo = ofs * ((1 - math.tan(angle2 / 2) ** 2) / (1 + math.tan(angle2 / 2) ** 2))
+    phyo = ofs * ((2 * math.tan(angle2 / 2)) / (1 + math.tan(angle2 / 2) ** 2))
+    xo.append(phxo + x2[i])                                # get offset points
+    yo.append(phyo + y2[i])
+    phxw = (ofs + wid) * ((1 - math.tan(angle2 / 2) ** 2) / (1 + math.tan(angle2 / 2) ** 2))
+    phyw = (ofs + wid) * ((2 * math.tan(angle2 / 2)) / (1 + math.tan(angle2 / 2) ** 2))
+    xw.append(phxw + x2[i])                               # get width points
+    yw.append(phyw + y2[i])
+    phxl = leng * ((1 - math.tan(angle3 / 2) ** 2) / (1 + math.tan(angle3 / 2) ** 2))
+    phyl = leng * ((2 * math.tan(angle3 / 2)) / (1 + math.tan(angle3 / 2) ** 2))
+    xl.append(phxl + x2[i])                                # get length points
+    yl.append(phyl + y2[i])
+    print('Point Head Angle: ', phang)
+    print('x2: ', x2[i], 'y2: ', y2[i])
+    print('Offset x: ', xo[i], 'yo:', yo[i])
+    print('Width x: ', xw[i], 'yw:', yw[i])
+    print('Length x: ', xl[i], 'yl:', yl[i])
+    print()
+    if i == 359:
+        Display(x1, y1, x2, y2, xo, yo, xw, yw, xl, yl)
+
+def Display(x1, y1, x2, y2, xo, yo, xw, yw, xl, yl):
+    xmin = min(xl)
+    ymin = min(yl)
+    xmax = max(xl)
+    ymax = max(yl)
+    if xmin > min(xw):
+        xmin = min(xw)
+    if ymin > min(yw):
+        ymin = min(yw)
+    if xmax < max(xw):
+        xmax = max(xw)
+    if ymax < max(yw):
+        ymax = max(yw)
+    GetSpindle2(x2, y2)
+
+    fig = plt.figure()              # plot
+
+    plt.suptitle("Three Spindle Hypo Cycloid", fontsize=14)         # name and bounds
+    plt.plot(xmin, ymin)
+    plt.plot(xmax, ymax)
+
+    graph, = plt.plot([], [], color='k', label='Base')      # set labels and colors
+    graph2, = plt.plot([], [], color='tab:purple', label='Point Head')
+    graph3, = plt.plot([], [], color='r', label='Point Head 2')
+    #graph3, = plt.plot([], [], color='tab:orange', label='Offset')
+    graph4, = plt.plot([], [], color='g', label='Width')
+    graph5, = plt.plot([], [], color='b', label='Length')
+    plt.grid(color='#7171C6', linestyle='-', linewidth=.2)  # light grey)
+    plt.autoscale(enable=True, axis='both', tight=None)
+    plt.legend()
+
+    def init():
+        return graph, graph2, graph4, graph5, graph3,
+
+    def animate(i):                 # animation data
+        graph.set_data(x1[:i], y1[:i])
+        graph2.set_data(x2[:i], y2[:i])
+        graph3.set_data(x3[:i], y3[:i])
+        #graph3.set_data(xo[:i], yo[:i])
+        graph4.set_data(xw[:i], yw[:i])
+        graph5.set_data(xl[:i], yl[:i])
+        return graph, graph2, graph4, graph5, graph3,
+
+    ani = FuncAnimation(fig, animate, frames=range(len(x1)), interval=50, save_count=len(x1),
+                        init_func=init, blit=True)
+    f = r"c://Adams/Python/HypoCycloid/TSHC.mp4"
+    writervideo = animation.FFMpegWriter(fps=40)
+    ani.save(f, writer=writervideo)
+    #ani.save('TSHC.gif', writer='PillowWriter')         # save
+
+    plt.show()
+
+def GetSpindle2(x2, y2):        # crate spindle line 120deg behind current one
+    temp = 0
+    for i in range(len(x2)):
+        temp = i + 239
+        if temp > 359:
+            temp -= 359
+        x3.append(x2[temp])
+        y3.append(y2[temp])
